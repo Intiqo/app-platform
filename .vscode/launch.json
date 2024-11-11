@@ -1,0 +1,17 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Start App Api",
+      "type": "go",
+      "request": "launch",
+      "mode": "debug",
+      "program": "${workspaceFolder}/cmd",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "CONFIG_SOURCE": "ENVIRONMENT",
+        "AWS_PROFILE": "Intiqo"
+      }
+    }
+  ]
+}

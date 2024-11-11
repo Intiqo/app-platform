@@ -1,0 +1,60 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "wire",
+      "type": "shell",
+      "command": "make wire"
+    },
+    {
+      "label": "migrate",
+      "type": "shell",
+      "command": "make migrate"
+    },
+    {
+      "label": "doc",
+      "type": "shell",
+      "command": "make doc"
+    },
+    {
+      "label": "build",
+      "type": "shell",
+      "command": "make build"
+    },
+    {
+      "label": "clean",
+      "type": "shell",
+      "command": "make clean"
+    },
+    {
+      "label": "stop",
+      "type": "shell",
+      "command": "make stop"
+    },
+    {
+      "label": "start",
+      "type": "shell",
+      "command": "make start"
+    },
+    {
+      "label": "sdk-gen",
+      "type": "shell",
+      "command": "make sdk-gen"
+    },
+    {
+      "label": "migrate-test",
+      "type": "shell",
+      "command": "make migrate-test"
+    },
+    {
+      "label": "pretest",
+      "type": "shell",
+      "command": "make pretest"
+    },
+    {
+      "label": "test-cover",
+      "type": "shell",
+      "command": "make test-cover"
+    }
+  ]
+}

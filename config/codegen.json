@@ -1,0 +1,19 @@
+{
+  "supportsES6": true,
+  "modelPropertyNaming": "snake_case",
+  "npmName": "@Intiqo/app-sdk-ts",
+  "npmRepository": "https://github.com/Intiqo/app-sdk-ts/pkgs/npm/app-sdk-ts",
+  "npmVersion": "0.0.1",
+  "withInterfaces": true,
+  "sortModelPropertiesByRequiredFlag": true,
+  "sortParamsByRequiredFlag": true,
+  "withSeparateModelsAndApi": true,
+  "apiPackage": "api",
+  "modelPackage": "model",
+  "useTags": true,
+  "ensureUniqueParams": true,
+  "enumPropertyNaming": "PascalCase",
+  "enumUnknownDefaultCase": true,
+  "stringEnums": false,
+  "withoutPrefixEnums": true
+}

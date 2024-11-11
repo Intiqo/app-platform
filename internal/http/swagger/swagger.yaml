@@ -1,0 +1,170 @@
+basePath: /api/v1
+definitions:
+  BaseResponse:
+    properties:
+      data: {}
+    type: object
+  ErrorResponse:
+    properties:
+      code:
+        example: INTERNAL_SERVER_ERROR
+        type: string
+      message:
+        example: Internal Server Error
+        type: string
+    type: object
+  FilterSettingsByCriteriaInput:
+    properties:
+      keys:
+        example:
+        - app.name
+        items:
+          type: string
+        type: array
+    type: object
+  PaginationResponse:
+    properties:
+      data: {}
+      page:
+        example: 1
+        type: integer
+      size:
+        example: 10
+        type: integer
+      total:
+        example: 100
+        type: integer
+    type: object
+  Setting:
+    properties:
+      id:
+        example: 550e8400-e29b-41d4-a716-446655440000
+        type: string
+      key:
+        example: app.name
+        type: string
+      value:
+        example: App
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact:
+    email: hello@intiqo.com
+    name: Intiqo Private Limited
+    url: https://intiqo.in/
+  description: App's set of APIs
+  termsOfService: https://intiqo.com/terms/
+  title: App API
+  version: "1.0"
+paths:
+  /setting/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Find a setting by id
+      operationId: findSettingByID
+      parameters:
+      - description: Setting ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/BaseResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/Setting'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - JWT: []
+      summary: Find a setting by id
+      tags:
+      - Setting
+  /setting/filter:
+    post:
+      consumes:
+      - application/json
+      description: Filter settings by criteria. Supports pagination and returns the
+        number of records as total.
+      operationId: filterSettingsByCriteria
+      parameters:
+      - description: Page Index
+        in: query
+        name: page
+        type: number
+      - description: Page Size
+        in: query
+        name: size
+        type: number
+      - description: Input
+        in: body
+        name: in
+        required: true
+        schema:
+          $ref: '#/definitions/FilterSettingsByCriteriaInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/PaginationResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/Setting'
+                  type: array
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - JWT: []
+      summary: Filter settings by criteria
+      tags:
+      - Setting
+schemes:
+- https
+securityDefinitions:
+  JWT:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

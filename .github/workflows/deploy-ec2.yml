@@ -1,0 +1,100 @@
+############################################################
+# This workflow will be triggered whenever a release
+# is created and will perform the following operations:
+#
+# 1. Spin up an Ubuntu machine
+# 2. Set up the repository in the machine
+# 3. Build the platform
+# 4. Deploy to EC2
+############################################################
+
+name: Deploy - EC2
+
+on:
+  # Triggers the workflow when a pre-release is created
+  release:
+    types: [released]
+
+jobs:
+  deployment:
+    name: Deploy - Production (EC2)
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checkout the repository on the machine
+      - uses: actions/checkout@v4
+
+      # Setup Go
+      - name: Setup Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.22' # The Go version to download (if necessary) and use.
+
+      # Whitelist the public IP for SSH access on AWS security group
+      - name: Enable SSH Access
+        uses: sohelamin/aws-security-group-add-ip-action@master
+        with:
+          aws-access-key-id: ${{ secrets.PRODUCTION_AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.PRODUCTION_AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.PRODUCTION_AWS_REGION }}
+          aws-security-group-id: ${{ secrets.PRODUCTION_AWS_SECURITY_GROUP_ID }}
+          port: '22'
+          to-port: '30'
+          protocol: 'tcp'
+          description: 'GitHub Action'
+
+      # Whitelist the public IP for Postgres access on AWS security group
+      - name: Enable Postgres access
+        uses: sohelamin/aws-security-group-add-ip-action@master
+        with:
+          aws-access-key-id: ${{ secrets.PRODUCTION_AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.PRODUCTION_AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.PRODUCTION_AWS_REGION }}
+          aws-security-group-id: ${{ secrets.PRODUCTION_AWS_SECURITY_GROUP_ID }}
+          port: '5432'
+          to-port: ''
+          protocol: 'tcp'
+          description: 'GitHub Action'
+
+      # Create the build
+      - name: Create Build
+        run: |
+          sh scripts/cd-build.sh
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.PRODUCTION_AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.PRODUCTION_AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: ${{ secrets.PRODUCTION_AWS_REGION }}
+
+      # Copy the build to EC2 instances
+      - name: Copy build to servers
+        uses: appleboy/scp-action@v0.1.3
+        with:
+          host: ${{ secrets.PRODUCTION_SCP_HOSTS }}
+          username: ${{ secrets.PRODUCTION_SCP_USERNAME }}
+          port: ${{ secrets.PRODUCTION_SCP_PORT }}
+          key: ${{ secrets.PRODUCTION_SCP_KEY }}
+          source: "bin/app"
+          target: "~/apps/app/"
+          strip_components: 1
+
+      # Migrate the database changes
+      - name: Migrate the database changes
+        run: |
+          go install github.com/pressly/goose/v3/cmd/goose@latest
+          goose --dir './internal/database/migrations' postgres "$POSTGRES_DB_URL" up
+        env:
+          POSTGRES_DB_URL: ${{ secrets.PRODUCTION_POSTGRES_DB_URL }}
+
+      - name: Deploy Build & Restart Services
+        run: |
+          echo "$PRIVATE_KEY" > private_key && chmod 600 private_key
+          for host in $(echo $HOSTS | tr "," "\n")
+          do
+            ssh -o StrictHostKeyChecking=no -i private_key ${USER_NAME}@$host '
+              sudo systemctl restart app.service
+            '
+          done
+        env:
+          PRIVATE_KEY: ${{ secrets.PRODUCTION_SCP_KEY }}
+          USER_NAME: ${{ secrets.PRODUCTION_SCP_USERNAME }}
+          HOSTS: ${{ secrets.PRODUCTION_SCP_HOSTS }}
